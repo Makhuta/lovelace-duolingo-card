@@ -2,5 +2,16 @@
     "name": "Duolingo Cards",
     "content_in_root": true,
     "filename": "duolingo-card.js",
-    "render_readme": true
-}
+    "render_readme": true,
+    "dependencies": [],
+    "manifest": {
+      "js": [
+        "duolingo-card.js",
+        "duolingo-friends-card.js",
+        "duolingo-profile-card.js",
+        "duolingo-leaderboard-card.js"
+      ],
+      "css": []
+    }
+  }
+  
