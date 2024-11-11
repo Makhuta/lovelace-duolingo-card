@@ -1,0 +1,6 @@
+{
+    "name": "Duolingo Cards",
+    "content_in_root": true,
+    "filename": "duolingo-card.js",
+    "render_readme": true
+}
