@@ -1,6 +1,10 @@
+// Import cards
 import { DuolingoProfileCard } from './duolingo-profile-card.js';
 import { DuolingoFriendsCard } from './duolingo-friends-card.js';
 import { DuolingoLeaderboardCard } from './duolingo-leaderboard-card.js';
+
+// Import editor
+import './duolingo-card-editor.js';
 
 // Ensure the custom elements are defined
 if (!customElements.get('duolingo-profile-card')) {

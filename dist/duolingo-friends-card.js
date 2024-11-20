@@ -227,6 +227,14 @@ export class DuolingoFriendsCard extends HTMLElement {
         return
     }
 
+    static getConfigElement() {
+        return document.createElement("duolingo-card-editor");
+    }
+    
+    static getStubConfig() {
+        return { entity: null, title: null, show_all: false };
+    }
+
     getCardSize() {
         return 1;
     }
@@ -239,9 +247,43 @@ window.customCards = window.customCards || [];
 if (!window.customCards.some(card => card.type === 'duolingo-friends-card')) {
   window.customCards.push({
     type: 'duolingo-friends-card',
-    name: 'Duolingo Profile Card',
+    name: 'Duolingo Friends Card',
     preview: true,
     description: 'The Upcoming Media card displays upcoming episodes and movies from services like: Plex, Kodi, Radarr, Sonarr, and Trakt.',
     previewImage: 'https://github.com/custom-cards/upcoming-media-card/blob/master/image.png?raw=true',
+    schema: [
+        {
+            name: "title",
+            selector: {
+                text: {}
+            },
+            label: "ui.panel.lovelace.editor.card.generic.title"
+        },
+        {
+            name: "entity",
+            required: true,
+            selector: { entity: {
+                    domain: "sensor",
+                    integration: "duolingo",
+                }
+            },
+            label: "ui.panel.lovelace.editor.card.entity.name"
+        },
+        {
+            name: "border",
+            required: true,
+            selector: { 
+                select: {
+                    options: [
+                        { value: "none", label: "None"},
+                        { value: "rounded", label: "Rounded"},
+                        { value: "circle", label: "Circle"}
+                    ],
+                    mode: "dropdown"
+                }
+             },
+            label: "Border"
+        }
+    ],
   });
 }
