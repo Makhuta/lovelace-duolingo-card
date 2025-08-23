@@ -1,12 +1,12 @@
 {
     "name": "Duolingo Cards",
     "content_in_root": false,
-    "filename": "duolingo-card.js",
+    "filename": "duolingo-cards.js",
     "render_readme": true,
     "dependencies": [],
     "manifest": {
       "js": [
-        "duolingo-card.js"
+        "duolingo-cards.js"
       ],
       "css": []
     }
