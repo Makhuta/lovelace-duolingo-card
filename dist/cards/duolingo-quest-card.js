@@ -13,12 +13,43 @@ class DuolingoQuestCard extends LitElement {
   static get styles() {
     return css`
       :host {
+        --duolingo-green: #58CC02;
+        --duolingo-light-green: #89E219;
+        --duolingo-blue: #1CB0F6;
+        --duolingo-light-blue: #47c5ffff;
         --duolingo-gold: #FFC800;
         --duolingo-red: #FF4B4B;
       }
 
       .card-content {
         padding: 16px;
+      }
+
+      .progress-container {
+        margin-top: 12px;
+      }
+
+      .progress-bar {
+        display: flex;
+        width: 100%;
+        height: 12px;
+        background-color: var(--divider-color);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+      }
+
+      .progress-fill.you {
+        background: linear-gradient(90deg, var(--duolingo-green), var(--duolingo-light-green));
+      }
+
+      .progress-fill.friend {
+        background: linear-gradient(90deg, var(--duolingo-blue), var(--duolingo-light-blue));
       }
 
       .quest-participants {
@@ -85,6 +116,16 @@ class DuolingoQuestCard extends LitElement {
         letter-spacing: 0.5px;
       }
 
+      .quest-name {
+        text-align: center;
+        margin-bottom: 16px;
+        padding: 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+      }
+
       .quest-active {
         background: #e8f5e8;
         color: #2e7d32;
@@ -140,20 +181,26 @@ class DuolingoQuestCard extends LitElement {
         </ha-card>
       `;
     }
-
+    const threshold = questData.threshold || 30;
+    const progressYou = questData.progressMeTotal || questData.progress_me_total || 0;
+    const progressFriend = questData.progressFriendTotal || questData.progress_friend_total || 0;
+    const percentYou = (progressYou / threshold) * 100;
+    const percentFriend = (progressFriend / threshold) * 100;
     return html`
       <ha-card header="${this.config.title}">
         <div class="card-content">
           ${this.renderQuestStatus(questData)}
+          ${this.renderQuestName(questData)}
           
           <div class="quest-participants">
             <div class="participant">
-              <img src="${this.getUserAvatar()}" alt="User" class="participant-avatar"
+              <img src="${questData.youAvatar || questData.you_avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
+                   alt="Friend" class="participant-avatar"
                    @error="${this._handleImageError}">
               <div class="participant-info">
-                <span>You</span>
+                <span>${questData.youName || questData.you_name || 'You'}</span>
                 <div class="participant-progress">
-                  ${questData.progressMeTotal || questData.progress_me_total || 0} / ${questData.threshold || 30}
+                  ${progressYou} / ${threshold}
                 </div>
               </div>
             </div>
@@ -167,9 +214,16 @@ class DuolingoQuestCard extends LitElement {
               <div class="participant-info">
                 <span>${questData.userName || questData.user_name || questData.friendName || questData.friend_name || 'Friend'}</span>
                 <div class="participant-progress">
-                  ${questData.progressFriendTotal || questData.progress_friend_total || 0} / ${questData.threshold || 30}
+                  ${progressFriend} / ${threshold}
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill you" style="width: ${Math.min(percentYou, 100 - percentFriend)}%"></div>
+              <div class="progress-fill friend" style="left: ${Math.min(percentYou, 100 - percentFriend)}%; width: ${Math.min(percentFriend, 100 - percentYou)}%"></div>
             </div>
           </div>
           
@@ -183,13 +237,22 @@ class DuolingoQuestCard extends LitElement {
   }
 
   renderQuestStatus(questData) {
-    const isActive = questData.active || questData.state === 'Active';
+    const isActive = !questData.active || questData.state === 'Active';
+    const notStarted = !questData.active || questData.state === 'Not started';
     const statusClass = isActive ? 'quest-active' : 'quest-inactive';
-    const statusText = isActive ? 'Active Quest' : 'Quest Completed';
+    const statusText = isActive ? 'Active Quest' : notStarted ? 'Not started' : 'Quest Completed';
     
     return html`
       <div class="quest-status ${statusClass}">
         ${statusText}
+      </div>
+    `;
+  }
+
+  renderQuestName(questData) {
+    return html`
+      <div class="quest-name">
+        ${questData.name || questData.id || "Unknown"}
       </div>
     `;
   }
