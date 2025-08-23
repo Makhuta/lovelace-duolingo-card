@@ -166,6 +166,10 @@ class DuolingoLanguageCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Language"; }
 }
 
+class DuolingoLeaderboardCardEditor extends DuolingoCardEditor {
+  getDefaultTitle() { return "Duolingo Leaderboard"; }
+}
+
 class DuolinguoChallengeCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Monthly Challenge"; }
 }
@@ -186,6 +190,7 @@ class DuolingoFriendStreakCardEditor extends DuolingoCardEditor {
 customElements.define("duolingo-user-card-editor", DuolingoUserCardEditor);
 customElements.define("duolingo-streak-card-editor", DuolingoStreakCardEditor);
 customElements.define("duolingo-language-card-editor", DuolingoLanguageCardEditor);
+customElements.define("duolingo-leaderboard-card-editor", DuolingoLeaderboardCardEditor);
 customElements.define("duolingo-challenge-card-editor", DuolinguoChallengeCardEditor);
 customElements.define("duolingo-friends-card-editor", DuolingoFriendsCardEditor);
 customElements.define("duolingo-quest-card-editor", DuolingoQuestCardEditor);

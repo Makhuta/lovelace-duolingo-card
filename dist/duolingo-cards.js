@@ -4,6 +4,7 @@
 // Import all individual card components
 import "./cards/duolingo-user-card.js";
 import "./cards/duolingo-streak-card.js";
+import "./cards/duolingo-leaderboard-card.js";
 import "./cards/duolingo-language-card.js";
 import "./cards/duolingo-challenge-card.js";
 import "./cards/duolingo-friends-card.js";
