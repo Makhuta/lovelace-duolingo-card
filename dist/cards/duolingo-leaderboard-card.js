@@ -214,35 +214,39 @@ class DuolingoLeaderboardCard extends LitElement {
 
   renderPodiumPlace(friend, rank, cls) {
     if (!friend) return html``;
+    var avatar = friend.avatar || friend.avatar_url;
+    avatar = avatar ? avatar.endsWith("large") ? avatar : avatar + "/large" : avatar
     return html`
       <div class="podium-place ${cls}">
         <img
           class="avatar"
-          src="${friend.avatar ||
+          src="${avatar ||
           "https://simg-ssl.duolingo.com/avatar/default_2/large"}"
-          alt="${friend.fullname || friend.username}"
+          alt="${friend.fullname || friend.username || friend.display_name}"
           @error="${this._handleImageError}"
         />
-        <div class="podium-name">${friend.fullname || friend.username}</div>
-        <div class="podium-xp">${this.formatNumber(friend.xp || 0)} XP</div>
+        <div class="podium-name">${friend.fullname || friend.username || friend.display_name}</div>
+        <div class="podium-xp">${this.formatNumber(friend.xp || friend.score || 0)} XP</div>
       </div>
     `;
   }
 
   renderFriendItem(friend, rank) {
+    var avatar = friend.avatar || friend.avatar_url;
+    avatar = avatar ? avatar.endsWith("large") ? avatar : avatar + "/large" : avatar
     return html`
       <div class="friend-item">
         <div class="friend-rank">${rank}</div>
         <img
-          src="${friend.avatar ||
+          src="${avatar ||
           "https://simg-ssl.duolingo.com/avatar/default_2/large"}"
           alt="${friend.fullname || friend.username}"
           class="friend-avatar"
           @error="${this._handleImageError}"
         />
         <div class="friend-info">
-          <span class="friend-name">${friend.fullname || friend.username}</span>
-          <span class="friend-xp">${this.formatNumber(friend.xp || 0)} XP</span>
+          <span class="friend-name">${friend.fullname || friend.username || friend.display_name}</span>
+          <span class="friend-xp">${this.formatNumber(friend.xp || friend.score || 0)} XP</span>
         </div>
       </div>
     `;
@@ -260,7 +264,7 @@ class DuolingoLeaderboardCard extends LitElement {
       .filter((k) => !isNaN(k)) // only numeric keys "1", "2", ...
       .map((k) => data[k]);
 
-    return filtered.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+    return filtered.sort((a, b) => (b.xp || b.score || 0) - (a.xp || a.score || 0));
   }
 
   getEntityName() {
