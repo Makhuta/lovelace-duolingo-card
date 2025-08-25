@@ -263,8 +263,8 @@ class DuolingoLeaderboardCard extends LitElement {
     const filtered = Object.keys(data)
       .filter((k) => !isNaN(k)) // only numeric keys "1", "2", ...
       .map((k) => data[k]);
-
-    return filtered.sort((a, b) => (b.xp || b.score || 0) - (a.xp || a.score || 0));
+    const sorted = filtered.sort((a, b) => (b.xp || b.score || 0) - (a.xp || a.score || 0));
+    return (this.config && !isNaN(this.config.max_people) && this.config.max_people > 0) ? (sorted.slice(0, this.config.max_people)) : sorted
   }
 
   getEntityName() {

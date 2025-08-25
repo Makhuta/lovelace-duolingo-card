@@ -1,4 +1,5 @@
-const LitElement = customElements.get("hui-masonry-view") ? Object.getPrototypeOf(customElements.get("hui-masonry-view")) : Object.getPrototypeOf(customElements.get("hui-view"));
+const viewEl = customElements.get("hui-masonry-view") || customElements.get("hui-view");
+const LitElement = viewEl ? Object.getPrototypeOf(viewEl) : null;
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
@@ -11,6 +12,24 @@ class DuolingoCardEditor extends LitElement {
       hass: {},
       config: {},
     };
+  }
+
+  getConfigFields() {
+    return html``
+  }
+
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: ""
+    }
+  }
+
+  getEntityFilterExact() {
+    return {
+      prefixExact: [false],
+      suffixExact: [false]
+    }
   }
 
   static get styles() {
@@ -52,11 +71,6 @@ class DuolingoCardEditor extends LitElement {
     this.config = config;
   }
 
-  firstUpdated() {
-    // lazy-load the entity picker so it's registered
-    import("home-assistant-frontend/src/components/entity/ha-entity-picker");
-  }
-
   render() {
     if (!this.hass) {
       return html``;
@@ -65,55 +79,100 @@ class DuolingoCardEditor extends LitElement {
     return html`
       <div class="card-config">
         <div class="option">
-          <label for="title">Title (optional)</label>
-              <input
-                type="text"
-                id="title"
-                .value=${this.config.title || ""}
-                .configValue=${"title"}
-                @input=${this._valueChanged}
-                placeholder="${this.getDefaultTitle()}"
-              />
-            <small>Custom title for the card</small>
+          <ha-textfield
+            label="Title (optional)"
+            .value=${this.config?.title ?? ""}
+            .configValue=${"title"}
+            @input=${this._valueChanged}
+            placeholder=${this.getDefaultTitle()}
+            helper="Custom title for the card"
+          ></ha-textfield>
         </div>
         
-        <div class="option">
-          <label for="entity">Entity</label>
-          ${this.renderEntityPicker()}
-          <small>Select the entity containing Duolingo data</small>
-        </div>
+        ${this.renderEntityPicker()}
+
+        ${this.getConfigFields()}
       </div>
     `;
   }
 
-  renderEntityPicker() {
-    // Check if ha-entity-picker is available (in Home Assistant)
-    console.info('ha-entity-picker:', customElements.get('ha-entity-picker'));
-    if (customElements.get('ha-entity-picker')) {
-      return html`
-        <ha-entity-picker
-          .hass="${this.hass}"
-          .value="${this.config.entity || ""}"
-          .configValue=${"entity"}
-          domain-filter="sensor"
-          @value-changed="${this._valueChanged}"
-          allow-custom-entity
-        ></ha-entity-picker>
-      `;
-    } else {
-      // Fallback to regular input for demo environments
-      return html`
-        <input
-          type="text"
-          id="entity"
-          .value=${this.config.entity || ""}
-          .configValue=${"entity"}
-          @input=${this._valueChanged}
-          placeholder="sensor.duolingo_data"
-          style="padding: 8px; border: 1px solid var(--divider-color); border-radius: 4px; background: var(--card-background-color); color: var(--primary-text-color); width: 100%;"
-        />
-      `;
+  normalizeFilter(filter) {
+    if (typeof filter === "string") {
+      return [{ value: filter, exact: false }];
     }
+    if (Array.isArray(filter)) {
+      return filter.map(item =>
+        typeof item === "string" ? { value: item, exact: false } : item
+      );
+    }
+    if (typeof filter === "object" && filter.value) {
+      return [{ value: filter.value, exact: !!filter.exact }];
+    }
+    return [];
+  }
+
+  renderEntityPicker() {
+    const entityFilter = this.getEntityFilter();
+    const prefixes = this.normalizeFilter(entityFilter.prefix);
+    const suffixes = this.normalizeFilter(entityFilter.suffix);
+
+    if (prefixes.length !== suffixes.length) {
+      console.warn("Prefix and suffix arrays must have the same length");
+    }
+
+    const options = Object.entries(this.hass.states)
+      .filter(([entityId]) => {
+        const domain = entityId.split(".")[0];
+        if (domain !== "sensor") return false;
+
+        const parts = entityId.split("_duolingo_");
+        if (parts.length !== 2) return false;
+
+        const entityPrefix = parts[0].split(".")[1];
+        const entitySuffix = parts[1];
+
+        for (let i = 0; i < prefixes.length; i++) {
+          const prefix = prefixes[i] || { value: "", exact: false };
+          const suffix = suffixes[i] || { value: "", exact: false };
+
+          const prefixMatch = prefix.exact
+            ? entityPrefix === prefix.value
+            : entityPrefix.endsWith(prefix.value);
+
+          const suffixMatch = suffix.exact
+            ? entitySuffix === suffix.value
+            : entitySuffix.startsWith(suffix.value);
+
+          if (prefixMatch && suffixMatch) return true;
+        }
+
+        return false;
+      })
+      .map(([entityId]) => ({
+        label: entityId,
+        value: entityId,
+      }));
+
+    return html`${this.renderDropdown("Entity", options, "entity")}`;
+  }
+
+  renderDropdown(label, options = [], selectedValueKey = "mode") {
+    return html`
+      <div class="option">
+        <ha-select
+          .label=${label}
+          .value=${this.config ? this.config[selectedValueKey] : "" ?? ""}
+          .configValue=${selectedValueKey}
+          @selected=${this._dropdownChanged}
+          @closed="${e => e.stopPropagation()}" 
+        >
+          ${options.map(
+            (opt) => html`<mwc-list-item value=${opt.value}>${opt.label}</mwc-list-item>`
+          )}
+        </ha-select>
+        <small>Select an option</small>
+      </div>
+    `;
   }
 
   getDefaultTitle() {
@@ -149,6 +208,25 @@ class DuolingoCardEditor extends LitElement {
       composed: true
     }));
   }
+
+  _dropdownChanged(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const target = ev.target;
+    const configValue = target.configValue;
+    const value = target.value;
+
+    if (this.config[configValue] === value) return;
+
+    const newConfig = { ...this.config };
+    newConfig[configValue] = value;
+
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true
+    }));
+  }
 }
 
 // =============================================================================
@@ -156,34 +234,112 @@ class DuolingoCardEditor extends LitElement {
 // =============================================================================
 class DuolingoUserCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo User"; }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "user"
+    }
+  }
 }
 
 class DuolingoStreakCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Streak"; }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "streak"
+    }
+  }
 }
 
 class DuolingoLanguageCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Language"; }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "language"
+    }
+  }
 }
 
 class DuolingoLeaderboardCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Leaderboard"; }
+  getConfigFields() {
+    return html`
+      <div class="option">
+        <ha-textfield
+          label="Max number of people in leaderboard"
+          type="number"
+          .value=${this.config?.max_people ?? 0}
+          min="0"
+          .configValue=${"max_people"}
+          @input=${this._valueChanged}
+          helper="0 = show all"
+        ></ha-textfield>
+      </div>
+    `
+  }
+  getEntityFilter() {
+    return {
+      prefix: ["leaderboard", "leaderboard", ""],
+      suffix: ["today", "week", { value: "leaderboard", exact: true }]
+    }
+  }
 }
 
 class DuolinguoChallengeCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Monthly Challenge"; }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "monthly"
+    }
+  }
 }
 
 class DuolingoFriendsCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Friends"; }
+  getConfigFields() {
+    return html`
+      <div class="option">
+        <ha-textfield
+          label="Max number of people in leaderboard"
+          type="number"
+          .value=${this.config?.max_people ?? 0}
+          min="0"
+          .configValue=${"max_people"}
+          @input=${this._valueChanged}
+          helper="0 = show all"
+        ></ha-textfield>
+      </div>
+    `
+  }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "friends"
+    }
+  }
 }
 
 class DuolingoQuestCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Friend Quest"; }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "friend_quest"
+    }
+  }
 }
 
 class DuolingoFriendStreakCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Friend Streak"; }
+  getEntityFilter() {
+    return {
+      prefix: "",
+      suffix: "friend_streak"
+    }
+  }
 }
 
 // Register editors

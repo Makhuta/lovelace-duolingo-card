@@ -193,11 +193,12 @@ class DuolingoFriendsCard extends LitElement {
       friendsArray = Object.values(friendsData);
     }
 
-    return friendsArray.filter(f => f.displayName || f.display_name).sort((a, b) => {
+    const sorted = friendsArray.filter(f => f.displayName || f.display_name).sort((a, b) => {
       const aXp = a.totalXp || a.total_xp || a.xp || 0;
       const bXp = b.totalXp || b.total_xp || b.xp || 0;
       return bXp - aXp;
     });
+    return (this.config && !isNaN(this.config.max_people) && this.config.max_people > 0) ? (sorted.slice(0, this.config.max_people)) : sorted
   }
 
   formatNumber(num) {

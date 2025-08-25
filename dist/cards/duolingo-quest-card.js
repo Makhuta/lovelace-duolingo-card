@@ -182,6 +182,7 @@ class DuolingoQuestCard extends LitElement {
       `;
     }
     const threshold = questData.threshold || 30;
+    const progress = questData.progressTotal || questData.progress_total || 0;
     const progressYou = questData.progressMeTotal || questData.progress_me_total || 0;
     const progressFriend = questData.progressFriendTotal || questData.progress_friend_total || 0;
     const percentYou = (progressYou / threshold) * 100;
@@ -200,7 +201,7 @@ class DuolingoQuestCard extends LitElement {
               <div class="participant-info">
                 <span>${questData.youName || questData.you_name || 'You'}</span>
                 <div class="participant-progress">
-                  ${progressYou} / ${threshold}
+                  ${progressYou} / ${threshold - progressFriend}
                 </div>
               </div>
             </div>
@@ -214,7 +215,7 @@ class DuolingoQuestCard extends LitElement {
               <div class="participant-info">
                 <span>${questData.userName || questData.user_name || questData.friendName || questData.friend_name || 'Friend'}</span>
                 <div class="participant-progress">
-                  ${progressFriend} / ${threshold}
+                  ${progressFriend} / ${threshold - progressYou}
                 </div>
               </div>
             </div>
@@ -224,6 +225,9 @@ class DuolingoQuestCard extends LitElement {
             <div class="progress-bar">
               <div class="progress-fill you" style="width: ${Math.min(percentYou, 100 - percentFriend)}%"></div>
               <div class="progress-fill friend" style="left: ${Math.min(percentYou, 100 - percentFriend)}%; width: ${Math.min(percentFriend, 100 - percentYou)}%"></div>
+            </div>
+            <div class="participant-progress">
+              ${progress} / ${threshold}
             </div>
           </div>
           
@@ -237,11 +241,11 @@ class DuolingoQuestCard extends LitElement {
   }
 
   renderQuestStatus(questData) {
-    const isActive = !questData.active || questData.state === 'Active';
+    const isActive = questData.active || questData.state === 'Active';
     const notStarted = !questData.active || questData.state === 'Not started';
     const statusClass = isActive ? 'quest-active' : 'quest-inactive';
     const statusText = isActive ? 'Active Quest' : notStarted ? 'Not started' : 'Quest Completed';
-    
+
     return html`
       <div class="quest-status ${statusClass}">
         ${statusText}
