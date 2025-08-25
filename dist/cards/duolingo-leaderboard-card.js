@@ -222,10 +222,10 @@ class DuolingoLeaderboardCard extends LitElement {
           class="avatar"
           src="${avatar ||
           "https://simg-ssl.duolingo.com/avatar/default_2/large"}"
-          alt="${friend.fullname || friend.username || friend.display_name}"
+          alt="${this.config.show_name ? (friend.fullname || friend.display_name || friend.username) : (friend.username || friend.fullname || friend.display_name)}"
           @error="${this._handleImageError}"
         />
-        <div class="podium-name">${friend.fullname || friend.username || friend.display_name}</div>
+        <div class="podium-name">${this.config.show_name ? (friend.fullname || friend.display_name || friend.username) : (friend.username || friend.fullname || friend.display_name)}</div>
         <div class="podium-xp">${this.formatNumber(friend.xp || friend.score || 0)} XP</div>
       </div>
     `;
@@ -240,12 +240,12 @@ class DuolingoLeaderboardCard extends LitElement {
         <img
           src="${avatar ||
           "https://simg-ssl.duolingo.com/avatar/default_2/large"}"
-          alt="${friend.fullname || friend.username}"
+          alt="${this.config.show_name ? (friend.fullname || friend.display_name || friend.username) : (friend.username || friend.fullname || friend.display_name)}"
           class="friend-avatar"
           @error="${this._handleImageError}"
         />
         <div class="friend-info">
-          <span class="friend-name">${friend.fullname || friend.username || friend.display_name}</span>
+          <span class="friend-name">${this.config.show_name ? (friend.fullname || friend.display_name || friend.username) : (friend.username || friend.fullname || friend.display_name)}</span>
           <span class="friend-xp">${this.formatNumber(friend.xp || friend.score || 0)} XP</span>
         </div>
       </div>

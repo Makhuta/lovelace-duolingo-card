@@ -113,7 +113,7 @@ class DuolingoUserCard extends LitElement {
                  alt="User Avatar" class="user-avatar"
                  @error="${this._handleImageError}">
             <div class="user-info">
-              <h4>${userData.fullname || userData.username || 'Unknown User'}</h4>
+              <h4>${this.config.show_name ? (userData.fullname || userData.username || 'Unknown User') : (userData.username || userData.fullname || 'Unknown User')}</h4>
               <p>@${userData.username || 'unknown'}</p>
               <div class="xp-display">
                 <ha-icon icon="mdi:star"></ha-icon>

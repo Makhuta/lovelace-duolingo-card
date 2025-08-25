@@ -199,7 +199,10 @@ class DuolingoQuestCard extends LitElement {
                    alt="Friend" class="participant-avatar"
                    @error="${this._handleImageError}">
               <div class="participant-info">
-                <span>${questData.youName || questData.you_name || 'You'}</span>
+                <span>${this.config.show_name ?
+                  (questData.youDisplayName || questData.you_display_name || questData.you_name || questData.youName || questData.you_username || questData.youUsername || 'You') :
+                  (questData.you_username || questData.youUsername || questData.youDisplayName || questData.you_display_name || questData.you_name || questData.youName || 'You')}
+                </span>
                 <div class="participant-progress">
                   ${progressYou} / ${threshold - progressFriend}
                 </div>
@@ -213,7 +216,10 @@ class DuolingoQuestCard extends LitElement {
                    alt="Friend" class="participant-avatar"
                    @error="${this._handleImageError}">
               <div class="participant-info">
-                <span>${questData.userName || questData.user_name || questData.friendName || questData.friend_name || 'Friend'}</span>
+                <span>${this.config.show_name ?
+                  (questData.displayName || questData.display_name || questData.user_name || questData.userName || 'Friend') :
+                  (questData.user_name || questData.userName || questData.displayName || questData.display_name || 'Friend')}
+                </span>
                 <div class="participant-progress">
                   ${progressFriend} / ${threshold - progressYou}
                 </div>

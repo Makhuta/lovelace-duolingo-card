@@ -130,7 +130,7 @@ class DuolingoFriendStreakCard extends LitElement {
                  alt="Friend" class="streak-avatar"
                  @error="${this._handleImageError}">
             <div class="streak-details">
-              <h4>${streakData.name || streakData.displayName || streakData.display_name || 'Friend'}</h4>
+              <h4>${this.config.show_name ? (streakData.name || streakData.displayName || streakData.display_name || streakData.username || 'Friend') : (streakData.username || streakData.name || streakData.displayName || streakData.display_name || 'Friend')}</h4>
               <div class="streak-length">
                 ${streakData.length || 0} days
               </div>

@@ -160,12 +160,12 @@ class DuolingoFriendsCard extends LitElement {
       <div class="friend-item">
         <div class="friend-rank">${rank}</div>
         <img src="${friend.picture || friend.avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
-             alt="${friend.displayName || friend.display_name || friend.name}" 
+             alt="${this.config.show_name ? (friend.displayName || friend.display_name || friend.name || 'Unknown') : (friend.username || 'Unknown')}" 
              class="friend-avatar"
              @error="${this._handleImageError}">
         <div class="friend-info">
           <span class="friend-name">
-            ${friend.displayName || friend.display_name || friend.name || 'Unknown'}
+            ${this.config.show_name ? (friend.displayName || friend.display_name || friend.name || 'Unknown') : (friend.username || 'Unknown')}
             ${(friend.hasSubscription || friend.has_subscription) ? html`<span class="subscription-badge">PLUS</span>` : ''}
           </span>
           <span class="friend-xp">${this.formatNumber(friend.totalXp || friend.total_xp || friend.xp || 0)} XP</span>

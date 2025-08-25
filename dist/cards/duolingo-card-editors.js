@@ -180,21 +180,17 @@ class DuolingoCardEditor extends LitElement {
   }
 
   _valueChanged(ev) {
-    if (!this.config || !this.hass) {
-      return;
-    }
+    if (!this.config || !this.hass) return;
 
     const target = ev.target;
     const configValue = target.configValue;
-    const value = target.value;
 
-    if (this.config[configValue] === value) {
-      return;
-    }
+    // Handle both textfields/selects and switches
+    const value = target.checked !== undefined ? target.checked : target.value;
 
-    const newConfig = {
-      ...this.config,
-    };
+    if (this.config[configValue] === value) return;
+
+    const newConfig = { ...this.config };
 
     if (value === "" || value === undefined) {
       delete newConfig[configValue];
@@ -234,6 +230,11 @@ class DuolingoCardEditor extends LitElement {
 // =============================================================================
 class DuolingoUserCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo User"; }
+  getConfigFields() {
+    return html`
+      ${show_name_toggle(this)}
+    `
+  }
   getEntityFilter() {
     return {
       prefix: "",
@@ -266,17 +267,8 @@ class DuolingoLeaderboardCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Leaderboard"; }
   getConfigFields() {
     return html`
-      <div class="option">
-        <ha-textfield
-          label="Max number of people in leaderboard"
-          type="number"
-          .value=${this.config?.max_people ?? 0}
-          min="0"
-          .configValue=${"max_people"}
-          @input=${this._valueChanged}
-          helper="0 = show all"
-        ></ha-textfield>
-      </div>
+      ${show_name_toggle(this)}
+      ${max_people_field(this)}
     `
   }
   getEntityFilter() {
@@ -301,17 +293,8 @@ class DuolingoFriendsCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Duolingo Friends"; }
   getConfigFields() {
     return html`
-      <div class="option">
-        <ha-textfield
-          label="Max number of people in leaderboard"
-          type="number"
-          .value=${this.config?.max_people ?? 0}
-          min="0"
-          .configValue=${"max_people"}
-          @input=${this._valueChanged}
-          helper="0 = show all"
-        ></ha-textfield>
-      </div>
+      ${show_name_toggle(this)}
+      ${max_people_field(this)}
     `
   }
   getEntityFilter() {
@@ -324,6 +307,11 @@ class DuolingoFriendsCardEditor extends DuolingoCardEditor {
 
 class DuolingoQuestCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Friend Quest"; }
+  getConfigFields() {
+    return html`
+      ${show_name_toggle(this)}
+    `
+  }
   getEntityFilter() {
     return {
       prefix: "",
@@ -334,12 +322,48 @@ class DuolingoQuestCardEditor extends DuolingoCardEditor {
 
 class DuolingoFriendStreakCardEditor extends DuolingoCardEditor {
   getDefaultTitle() { return "Friend Streak"; }
+  getConfigFields() {
+    return html`
+      ${show_name_toggle(this)}
+    `
+  }
   getEntityFilter() {
     return {
       prefix: "",
       suffix: "friend_streak"
     }
   }
+}
+
+
+function max_people_field(t) {
+  return html`
+      <div class="option">
+        <ha-textfield
+          label="Max number of people in leaderboard"
+          type="number"
+          .value=${t.config?.max_people ?? 0}
+          min="0"
+          .configValue=${"max_people"}
+          @input=${t._valueChanged}
+          helper="0 = show all"
+        ></ha-textfield>
+      </div>
+    `
+}
+
+function show_name_toggle(t) {
+  return html`
+    <div class="option">
+      <ha-formfield label="Show name">
+        <ha-switch
+          .checked=${t.config?.show_name ?? false}
+          .configValue=${"show_name"}
+          @change=${t._valueChanged}
+        ></ha-switch>
+    </ha-formfield>
+    </div>
+  `
 }
 
 // Register editors
