@@ -84,7 +84,7 @@ class DuolingoQuestCard extends LitElement {
         font-size: 14px;
       }
 
-      .vs-divider {
+      .and-divider {
         font-weight: bold;
         color: var(--duolingo-red);
         padding: 0 12px;
@@ -149,7 +149,7 @@ class DuolingoQuestCard extends LitElement {
           gap: 16px;
         }
         
-        .vs-divider {
+        .and-divider {
           padding: 8px 0;
         }
       }
@@ -209,7 +209,7 @@ class DuolingoQuestCard extends LitElement {
               </div>
             </div>
             
-            <div class="vs-divider">VS</div>
+            <div class="and-divider">&</div>
             
             <div class="participant">
               <img src="${questData.userAvatar || questData.user_avatar || questData.friendAvatar || questData.friend_avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
@@ -237,13 +237,19 @@ class DuolingoQuestCard extends LitElement {
             </div>
           </div>
           
-          <div class="quest-reward">
-            <ha-icon icon="mdi:star"></ha-icon>
-            <span>${questData.points || 5} Points</span>
-          </div>
+          ${this.renderPoints(questData)}
         </div>
       </ha-card>
     `;
+  }
+
+  renderPoints(questData) {
+    return this.config.show_points ? html`
+      <div class="quest-reward">
+        <ha-icon icon="mdi:star"></ha-icon>
+        <span>${questData.points || 5} Points</span>
+      </div>
+    ` : html``
   }
 
   renderQuestStatus(questData) {
@@ -252,11 +258,11 @@ class DuolingoQuestCard extends LitElement {
     const statusClass = isActive ? 'quest-active' : 'quest-inactive';
     const statusText = isActive ? 'Active Quest' : notStarted ? 'Not started' : 'Quest Completed';
 
-    return html`
+    return this.config.show_state ? html`
       <div class="quest-status ${statusClass}">
         ${statusText}
       </div>
-    `;
+    ` : html``;
   }
 
   renderQuestName(questData) {

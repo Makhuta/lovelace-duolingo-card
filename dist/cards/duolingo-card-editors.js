@@ -310,6 +310,8 @@ class DuolingoQuestCardEditor extends DuolingoCardEditor {
   getConfigFields() {
     return html`
       ${show_name_toggle(this)}
+      ${show_state_toggle(this)}
+      ${show_points_toggle(this)}
     `
   }
   getEntityFilter() {
@@ -359,6 +361,34 @@ function show_name_toggle(t) {
         <ha-switch
           .checked=${t.config?.show_name ?? false}
           .configValue=${"show_name"}
+          @change=${t._valueChanged}
+        ></ha-switch>
+    </ha-formfield>
+    </div>
+  `
+}
+
+function show_state_toggle(t) {
+  return html`
+    <div class="option">
+      <ha-formfield label="Show state">
+        <ha-switch
+          .checked=${t.config?.show_state ?? false}
+          .configValue=${"show_state"}
+          @change=${t._valueChanged}
+        ></ha-switch>
+    </ha-formfield>
+    </div>
+  `
+}
+
+function show_points_toggle(t) {
+  return html`
+    <div class="option">
+      <ha-formfield label="Show points">
+        <ha-switch
+          .checked=${t.config?.show_points ?? false}
+          .configValue=${"show_points"}
           @change=${t._valueChanged}
         ></ha-switch>
     </ha-formfield>
