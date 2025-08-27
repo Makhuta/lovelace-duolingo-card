@@ -25,6 +25,25 @@ class DuolingoQuestCard extends LitElement {
         padding: 16px;
       }
 
+      .quests-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .quest-item {
+        border: 1px solid var(--divider-color);
+        border-radius: 12px;
+        padding: 16px;
+        background: var(--card-background-color);
+      }
+
+      .quest-item:first-child {
+        border: none;
+        padding: 0;
+        background: transparent;
+      }
+
       .progress-container {
         margin-top: 12px;
       }
@@ -143,6 +162,13 @@ class DuolingoQuestCard extends LitElement {
         font-style: italic;
       }
 
+      .no-quests {
+        color: var(--secondary-text-color);
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+      }
+
       @media (max-width: 768px) {
         .quest-participants {
           flex-direction: column;
@@ -168,78 +194,102 @@ class DuolingoQuestCard extends LitElement {
       return html``;
     }
 
-    const questData = this.getQuestData();
+    const questsData = this.getAllQuestsData();
     
-    if (!questData) {
+    if (!questsData || questsData.length === 0) {
       return html`
         <ha-card header="${this.config.title}">
           <div class="card-content">
             <div class="error-message">
-              ${this.config.entity ? 'Entity not found or no quest data available' : 'Please configure an entity'}
+              ${this.getEntities().length === 0 ? 'Please configure at least one entity' : 'No quest data available from configured entities'}
             </div>
           </div>
         </ha-card>
       `;
     }
+
+    const uniqueQuests = this.deduplicateQuests(questsData);
+
+    if (uniqueQuests.length === 0) {
+      return html`
+        <ha-card header="${this.config.title}">
+          <div class="card-content">
+            <div class="no-quests">No unique quests found</div>
+          </div>
+        </ha-card>
+      `;
+    }
+
+    return html`
+      <ha-card header="${this.config.title}">
+        <div class="card-content">
+          <div class="quests-container">
+            <div class="quest-item">
+              ${uniqueQuests.map((questData, index) => this.renderQuestItem(questData, index))}
+            </div>
+          </div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  renderQuestItem(questData, index) {
     const threshold = questData.threshold || 30;
     const progress = questData.progressTotal || questData.progress_total || 0;
     const progressYou = questData.progressMeTotal || questData.progress_me_total || 0;
     const progressFriend = questData.progressFriendTotal || questData.progress_friend_total || 0;
     const percentYou = (progressYou / threshold) * 100;
     const percentFriend = (progressFriend / threshold) * 100;
-    return html`
-      <ha-card header="${this.config.title}">
-        <div class="card-content">
-          ${this.renderQuestStatus(questData)}
-          ${this.renderQuestName(questData)}
-          
-          <div class="quest-participants">
-            <div class="participant">
-              <img src="${questData.youAvatar || questData.you_avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
-                   alt="Friend" class="participant-avatar"
-                   @error="${this._handleImageError}">
-              <div class="participant-info">
-                <span>${this.config.show_name ?
-                  (questData.youDisplayName || questData.you_display_name || questData.you_name || questData.youName || questData.you_username || questData.youUsername || 'You') :
-                  (questData.you_username || questData.youUsername || questData.youDisplayName || questData.you_display_name || questData.you_name || questData.youName || 'You')}
-                </span>
-                <div class="participant-progress">
-                  ${progressYou} / ${threshold - progressFriend}
-                </div>
-              </div>
-            </div>
-            
-            <div class="and-divider">&</div>
-            
-            <div class="participant">
-              <img src="${questData.userAvatar || questData.user_avatar || questData.friendAvatar || questData.friend_avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
-                   alt="Friend" class="participant-avatar"
-                   @error="${this._handleImageError}">
-              <div class="participant-info">
-                <span>${this.config.show_name ?
-                  (questData.displayName || questData.display_name || questData.user_name || questData.userName || 'Friend') :
-                  (questData.user_name || questData.userName || questData.displayName || questData.display_name || 'Friend')}
-                </span>
-                <div class="participant-progress">
-                  ${progressFriend} / ${threshold - progressYou}
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="progress-container">
-            <div class="progress-bar">
-              <div class="progress-fill you" style="width: ${Math.min(percentYou, 100 - percentFriend)}%"></div>
-              <div class="progress-fill friend" style="left: ${Math.min(percentYou, 100 - percentFriend)}%; width: ${Math.min(percentFriend, 100 - percentYou)}%"></div>
-            </div>
+    return html`
+      ${this.renderQuestStatus(questData)}
+      ${this.renderQuestName(questData)}
+      
+      <div class="quest-participants">
+        <div class="participant">
+          <img src="${questData.youAvatar || questData.you_avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
+                alt="Friend" class="participant-avatar"
+                @error="${this._handleImageError}">
+          <div class="participant-info">
+            <span>${this.config.show_name ?
+              (questData.youDisplayName || questData.you_display_name || questData.you_name || questData.youName || questData.you_username || questData.youUsername || 'You') :
+              (questData.you_username || questData.youUsername || questData.youDisplayName || questData.you_display_name || questData.you_name || questData.youName || 'You')}
+            </span>
             <div class="participant-progress">
-              ${progress} / ${threshold}
+              ${progressYou} / ${threshold - progressFriend}
             </div>
           </div>
-          
-          ${this.renderPoints(questData)}
         </div>
-      </ha-card>
+        
+        <div class="and-divider">&</div>
+        
+        <div class="participant">
+          <img src="${questData.userAvatar || questData.user_avatar || questData.friendAvatar || questData.friend_avatar || 'https://simg-ssl.duolingo.com/avatar/default_2/large'}" 
+                alt="Friend" class="participant-avatar"
+                @error="${this._handleImageError}">
+          <div class="participant-info">
+            <span>${this.config.show_name ?
+              (questData.displayName || questData.display_name || questData.user_name || questData.userName || 'Friend') :
+              (questData.user_name || questData.userName || questData.displayName || questData.display_name || 'Friend')}
+            </span>
+            <div class="participant-progress">
+              ${progressFriend} / ${threshold - progressYou}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill you" style="width: ${Math.min(percentYou, 100 - percentFriend)}%"></div>
+          <div class="progress-fill friend" style="left: ${Math.min(percentYou, 100 - percentFriend)}%; width: ${Math.min(percentFriend, 100 - percentYou)}%"></div>
+        </div>
+        <div class="participant-progress">
+          ${progress} / ${threshold}
+        </div>
+      </div>
+      
+      ${this.renderPoints(questData)}
     `;
   }
 
@@ -273,12 +323,38 @@ class DuolingoQuestCard extends LitElement {
     `;
   }
 
-  getQuestData() {
-    if (!this.config.entity || !this.hass.states[this.config.entity]) {
+  getEntities() {
+    // Support both single entity (backward compatibility) and multiple entities
+    if (this.config.entity) {
+      return [this.config.entity];
+    }
+    // Filter out empty entities for actual processing
+    return (this.config.entities || []).filter(e => e && e.trim() !== '');
+  }
+
+  getAllQuestsData() {
+    const entities = this.getEntities();
+    const questsData = [];
+
+    entities.forEach(entityId => {
+      const questData = this.getQuestDataFromEntity(entityId);
+      if (questData) {
+        questsData.push({
+          ...questData,
+          entityId: entityId
+        });
+      }
+    });
+
+    return questsData;
+  }
+
+  getQuestDataFromEntity(entityId) {
+    if (!entityId || !this.hass.states[entityId]) {
       return null;
     }
 
-    const entity = this.hass.states[this.config.entity];
+    const entity = this.hass.states[entityId];
     
     if (entity.attributes.duolingo_data && entity.attributes.duolingo_data.friendQuest) {
       return entity.attributes.duolingo_data.friendQuest;
@@ -295,14 +371,75 @@ class DuolingoQuestCard extends LitElement {
     return null;
   }
 
-  getUserAvatar() {
-    if (this.config.entity && this.hass.states[this.config.entity]) {
-      const entity = this.hass.states[this.config.entity];
-      if (entity.attributes.duolingo_data && entity.attributes.duolingo_data.user) {
-        return entity.attributes.duolingo_data.user.avatar || entity.attributes.duolingo_data.user.entityPicture;
+  deduplicateQuests(questsData) {
+    const questMap = new Map();
+
+    for (const quest of questsData) {
+      // Extract UserID and YouID from quest data
+      const youId = this.extractUserId(quest, 'you');
+      const userId = this.extractUserId(quest, 'user');
+
+      if (youId === null || userId === null) {
+        // If we can't extract IDs, treat as unique
+        questMap.set(`${quest.entityId}_${Date.now()}_${Math.random()}`, quest);
+        continue;
+      }
+
+      // Create a normalized key - always put the smaller ID first
+      const normalizedKey = `${Math.min(youId, userId)}_${Math.max(youId, userId)}`;
+
+      if (questMap.has(normalizedKey)) {
+        // We have a duplicate, keep the one with lower YouID
+        const existingQuest = questMap.get(normalizedKey);
+        const existingYouId = this.extractUserId(existingQuest, 'you');
+        
+        if (youId < existingYouId) {
+          questMap.set(normalizedKey, quest);
+        }
+      } else {
+        questMap.set(normalizedKey, quest);
       }
     }
-    return 'https://simg-ssl.duolingo.com/avatar/default_2/large';
+
+    return Array.from(questMap.values());
+  }
+
+  extractUserId(quest, userType) {
+    // Cache for performance - avoid recreating arrays and strings on each call
+    const idField = `${userType}Id`;
+    const idFieldUnderscore = `${userType}_id`;
+    const idFieldCaps = `${userType}ID`;
+    
+    // Check most common formats first for better performance
+    if (quest[idField] !== undefined && quest[idField] !== null) {
+      const id = parseInt(quest[idField], 10);
+      if (!isNaN(id)) return id;
+    }
+    
+    if (quest[idFieldUnderscore] !== undefined && quest[idFieldUnderscore] !== null) {
+      const id = parseInt(quest[idFieldUnderscore], 10);
+      if (!isNaN(id)) return id;
+    }
+    
+    if (quest[idFieldCaps] !== undefined && quest[idFieldCaps] !== null) {
+      const id = parseInt(quest[idFieldCaps], 10);
+      if (!isNaN(id)) return id;
+    }
+
+    // Fallback to username extraction (more expensive)
+    const usernameField = userType === 'you' ? 
+      (quest.you_username || quest.youUsername) : 
+      (quest.user_name || quest.userName || quest.username);
+    
+    if (usernameField && typeof usernameField === 'string') {
+      // Try to extract numeric ID from username if it contains numbers
+      const numericMatch = usernameField.match(/\d+/);
+      if (numericMatch) {
+        return parseInt(numericMatch[0], 10);
+      }
+    }
+
+    return null;
   }
 
   _handleImageError(e) {
@@ -310,7 +447,10 @@ class DuolingoQuestCard extends LitElement {
   }
 
   getCardSize() {
-    return 3;
+    const entities = this.getEntities();
+    const baseSize = 3;
+    const additionalSize = Math.max(0, entities.length - 1) * 2;
+    return baseSize + additionalSize;
   }
 
   static getConfigElement() {
@@ -320,7 +460,7 @@ class DuolingoQuestCard extends LitElement {
   static getStubConfig() {
     return {
       type: "custom:duolingo-quest-card",
-      entity: "",
+      entities: [],
       title: "Friend Quest"
     };
   }
@@ -332,5 +472,5 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "duolingo-quest-card",
   name: "Duolingo Quest Card",
-  description: "Displays Duolingo friend quest information"
+  description: "Displays Duolingo friend quest information with support for multiple unique quests"
 });
