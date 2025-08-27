@@ -433,7 +433,7 @@ class DuolingoQuestCardEditor extends DuolingoCardEditor {
           <ha-icon icon="mdi:plus"></ha-icon>
           Add Entity
         </button>
-        <small>Select quest entities. Duplicates based on UserID/YouID pairs will be automatically deduplicated.</small>
+        <small>Select quest entities. Duplicates based on User ID/You ID pairs will be automatically deduplicated.</small>
       </div>
     `;
   }
